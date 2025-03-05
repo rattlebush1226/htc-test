@@ -31,16 +31,15 @@ class APITest(unittest.TestCase):
             # 处理复杂嵌套结构
             if 'lookupFeeUnit' in data and isinstance(data['lookupFeeUnit'], dict):
                 lookupFeeUnit_data = data['lookupFeeUnit']
-                self.assertIn('totalFee', lookupFeeUnit_data)
+                self.assertIn('totalFee33', lookupFeeUnit_data)
                 #self.assertEqual(nested_data['gateId'], 'expected_sub_value')
         except requests.RequestException as e:
             print(f"Request failed: {e}")
         except ValueError:
             print("Response is not valid JSON")
 
-def send_email(content, receiver, file=None):
+def send_email(content, subject, receiver, file=None):
     sender = 'warning@haotingche.net'
-    subject = "回归测试"
     smtpserver = 'smtp.exmail.qq.com'
     username = 'warning@haotingche.net'
     password = 'H_tingche08'
@@ -86,23 +85,27 @@ def send_email(content, receiver, file=None):
 
 
 if __name__ == '__main__':
-    # 重定向标准输出以捕获测试结果
-    old_stdout = sys.stdout
-    sys.stdout = mystdout = StringIO()
-#    runner = unittest.TextTestRunner()
-#    result = runner.run(unittest.makeSuite(APITest))
+    testCaseName = "回归测试-车道健康检测"
+# 创建一个 StringIO 对象来捕获测试结果
+    test_output = StringIO()
+    # 使用 TextTestRunner 并将 stream 参数设置为 test_output
+    runner = unittest.TextTestRunner(stream=test_output)
 
-    runner = unittest.TextTestRunner()
     # 使用 TestLoader 创建测试套件
     suite = unittest.TestLoader().loadTestsFromTestCase(APITest)
     result = runner.run(suite)
-    sys.stdout = old_stdout
 
     # 获取测试结果输出
-    test_output = mystdout.getvalue()
-    print(test_output)
+    test_output_text = test_output.getvalue()
+    print(test_output_text)
+
+     # 根据测试结果设置邮件标题
+    if result.wasSuccessful():
+        subject = testCaseName + " - 所有测试案例通过"
+    else:
+        subject = testCaseName + f"回归测试 - 测试失败，失败数量: {len(result.failures)}"
 
     # 邮件配置信息，请根据实际情况修改
-    send_email(test_output, receiver_list)
+    send_email(test_output_text, subject, receiver_list)
     # 发送邮件
     #send_email(subject, test_output, sender_email, sender_password, receiver_email)
