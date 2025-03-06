@@ -6,37 +6,86 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from io import StringIO
-import sys
+from datetime import datetime
+import datetime
+
 datetime_format = '%Y-%m-%d %H:%M:%S'
 date_format = '%Y-%m-%d'
-
 receiver_list = ['wl_cui@haotingche.net']
 
 class APITest(unittest.TestCase):
-    base_url = 'http://cloud.4-xiang.com'
-
+    base_url = 'https://api.4-xiang.com'
+    token = '28C5326284AF5B433850761B17A593C0'
+    #京RTYUPK，2024.10.31日到期
     @parameterized.expand([
-        ('case1', {'gateId': 216}),
-        ('case1', {'gateId': 218}),
-        ('case1', {'gateId': 219}),
-        ('case3', {'gateId': 220})
+        ('case1', {'parkUid': 'P20231205161512wLou', 'licencePlate': '京RYPLK4'}, {'status_code': 200, 'expected_key': 'totalFee', 'totalFee': 0})
     ])
-    def test_api_with_params(self, name, params):
-        endpoint = '/api/vi/online_pay/lookup_with_gate'
+    def test_api_with_params(self, name, params, expected):
+        prepare_date()
+        endpoint = '/mobile/parking/lp'
         url = self.base_url + endpoint
+        headers = {
+            'X-Auth-Token': self.token  # 根据实际情况调整token的格式
+        }
         try:
-            response = requests.get(url, params=params)
-            self.assertEqual(response.status_code, 200)
+            response = requests.get(url, params=params, headers=headers)
+            print(response)
+            self.assertEqual(response.status_code, expected['status_code'])
             data = response.json()
-            # 处理复杂嵌套结构
-            if 'lookupFeeUnit' in data and isinstance(data['lookupFeeUnit'], dict):
-                lookupFeeUnit_data = data['lookupFeeUnit']
-                self.assertIn('totalFee33', lookupFeeUnit_data)
-                #self.assertEqual(nested_data['gateId'], 'expected_sub_value')
+            print(data)
+            if 'data' in data and isinstance(data['data'], dict):
+                lookupFeeUnit_data = data['data']
+                self.assertIn('totalFee', lookupFeeUnit_data)
+                self.assertEqual(lookupFeeUnit_data['totalFee'], expected['totalFee'])
         except requests.RequestException as e:
             print(f"Request failed: {e}")
         except ValueError:
             print("Response is not valid JSON")
+
+def prepare_date():
+    #理想家园西北进口和出口
+    data_array = [
+        {"licencePlate":"京RYPLK4", "gateUid":"G20231205161512OkSE", "deltaMinutesAgo": 240}
+        #{"licencePlate": "京RYPLK4", "gateUid": "G20231205161512Q1pG", "deltaMinutesAgo": 0}
+    ]
+    # 遍历列表中的字典
+    for element in data_array:
+        make_request_lazy_supplement(element['licencePlate'], element['gateUid'], element['deltaMinutesAgo'])
+
+def make_request_lazy_supplement(licencePlate, gateUid, deltaMinutes):
+    url = "https://api.4-xiang.com/mgmt/remote/lazy_supplement"
+    headers = {
+        "x-auth-token": "39f1b0d9-c524-4c0f-b124-b41527dfc134",
+        "Content-Type": "application/json"
+    }
+    current_time = datetime.datetime.now()
+    delta_ago = current_time - datetime.timedelta(minutes=deltaMinutes)
+    # 将 2 个小时以前的时间转换为时间戳
+    eventTime = int(delta_ago.timestamp())
+
+    print(f"当前时间: {current_time}")
+    print(f"得到时间戳: {eventTime}")
+    # 定义字符串日期
+    # 将字符串日期转换为datetime对象
+    #date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+    # 将datetime对象转换为时间戳
+    eventTime = eventTime*1000
+    print(eventTime)
+    data = {
+        "reason": "远程人工补登",
+        "color": "蓝色",
+        "licencePlate": licencePlate,
+        "time": eventTime,
+        "gateUid": gateUid,
+        "eventTime": eventTime
+    }
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        print(f"请求出错: {e}")
+        return None
 
 def send_email(content, subject, receiver, file=None):
     sender = 'warning@haotingche.net'
@@ -60,7 +109,7 @@ def send_email(content, subject, receiver, file=None):
         msg = MIMEText(content, 'html', 'utf-8')
 
     msg['Subject'] = subject
-    msg['From'] = '回归测试-车道健康检测'
+    msg['From'] = subject
     try:
        # smtp = smtplib.SMTP_SSL('smtpdm.aliyun.com', 465)
         smtp = smtplib.SMTP()
@@ -85,7 +134,7 @@ def send_email(content, subject, receiver, file=None):
 
 
 if __name__ == '__main__':
-    testCaseName = "回归测试-车道健康检测"
+    testCaseName = "回归测试-正常临停计费检查"
 # 创建一个 StringIO 对象来捕获测试结果
     test_output = StringIO()
     # 使用 TextTestRunner 并将 stream 参数设置为 test_output
@@ -104,8 +153,5 @@ if __name__ == '__main__':
         subject = testCaseName + " - 所有测试案例通过"
     else:
         subject = testCaseName + f"回归测试 - 测试失败，失败数量: {len(result.failures)}"
-
     # 邮件配置信息，请根据实际情况修改
     send_email(test_output_text, subject, receiver_list)
-    # 发送邮件
-    #send_email(subject, test_output, sender_email, sender_password, receiver_email)

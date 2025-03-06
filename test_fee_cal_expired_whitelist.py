@@ -16,9 +16,9 @@ receiver_list = ['wl_cui@haotingche.net']
 class APITest(unittest.TestCase):
     base_url = 'https://api.4-xiang.com'
     token = '28C5326284AF5B433850761B17A593C0'
-
+    #京RTYUPK，2024.10.31日到期
     @parameterized.expand([
-        ('case1', {'parkUid': 'P20231205161512wLou', 'licencePlate': '闽YUUJJ3'}, {'status_code': 200, 'expected_key': 'totalFee', 'totalFee': 12})
+        ('case1', {'parkUid': 'P20231205161512wLou', 'licencePlate': '京RTYUPK'}, {'status_code': 200, 'expected_key': 'totalFee', 'totalFee': 12})
     ])
     def test_api_with_params(self, name, params, expected):
         prepare_date()
@@ -45,8 +45,8 @@ class APITest(unittest.TestCase):
 def prepare_date():
     #理想家园西北进口和出口
     data_array = [
-        {"licencePlate":"闽YUUJJ3", "gateUid":"G20231205161512OkSE", "deltaMinutesAgo": 120},
-        {"licencePlate": "闽YUUJJ3", "gateUid": "G20231205161512Q1pG", "deltaMinutesAgo": 0}
+        {"licencePlate":"京RTYUPK", "gateUid":"G20231205161512OkSE", "deltaMinutesAgo": 120},
+        {"licencePlate": "京RTYUPK", "gateUid": "G20231205161512Q1pG", "deltaMinutesAgo": 0}
     ]
     # 遍历列表中的字典
     for element in data_array:

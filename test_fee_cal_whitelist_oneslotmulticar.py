@@ -16,9 +16,9 @@ receiver_list = ['wl_cui@haotingche.net']
 class APITest(unittest.TestCase):
     base_url = 'https://api.4-xiang.com'
     token = '28C5326284AF5B433850761B17A593C0'
-
+    #京REWQU7，2028.10.31日到期,京GGGHY8
     @parameterized.expand([
-        ('case1', {'parkUid': 'P20231205161512wLou', 'licencePlate': '闽YUUJJ3'}, {'status_code': 200, 'expected_key': 'totalFee', 'totalFee': 12})
+        ('case1', {'parkUid': 'P20231205161512wLou', 'licencePlate': '京REWQU7'}, {'status_code': 200, 'expected_key': 'totalFee', 'totalFee': 6})
     ])
     def test_api_with_params(self, name, params, expected):
         prepare_date()
@@ -45,8 +45,9 @@ class APITest(unittest.TestCase):
 def prepare_date():
     #理想家园西北进口和出口
     data_array = [
-        {"licencePlate":"闽YUUJJ3", "gateUid":"G20231205161512OkSE", "deltaMinutesAgo": 120},
-        {"licencePlate": "闽YUUJJ3", "gateUid": "G20231205161512Q1pG", "deltaMinutesAgo": 0}
+        {"licencePlate":"京GGGHY8", "gateUid":"G20231205161512OkSE", "deltaMinutesAgo": 240},
+        {"licencePlate": "京REWQU7", "gateUid": "G20231205161512OkSE", "deltaMinutesAgo": 61}
+        #{"licencePlate": "京RYPLK4", "gateUid": "G20231205161512Q1pG", "deltaMinutesAgo": 0}
     ]
     # 遍历列表中的字典
     for element in data_array:
@@ -55,7 +56,7 @@ def prepare_date():
 def make_request_lazy_supplement(licencePlate, gateUid, deltaMinutes):
     url = "https://api.4-xiang.com/mgmt/remote/lazy_supplement"
     headers = {
-        "x-auth-token": "558993fd-0c94-4406-a5f8-f3bb6144ea94",
+        "x-auth-token": "39f1b0d9-c524-4c0f-b124-b41527dfc134",
         "Content-Type": "application/json"
     }
     current_time = datetime.datetime.now()
